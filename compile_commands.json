@@ -1,0 +1,47 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/x86_64-linux-gnu-gcc-10",
+      "-Wall",
+      "-std=gnu99",
+      "-pedantic",
+      "-c",
+      "portsettings.c",
+      "-o",
+      "portsettings.o"
+    ],
+    "directory": "/home/arno/src/trx",
+    "file": "/home/arno/src/trx/portsettings.c",
+    "output": "/home/arno/src/trx/portsettings.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/x86_64-linux-gnu-gcc-10",
+      "-Wall",
+      "-std=gnu99",
+      "-pedantic",
+      "-c",
+      "serial.c",
+      "-o",
+      "serial.o"
+    ],
+    "directory": "/home/arno/src/trx",
+    "file": "/home/arno/src/trx/serial.c",
+    "output": "/home/arno/src/trx/serial.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/x86_64-linux-gnu-gcc-10",
+      "-Wall",
+      "-std=gnu99",
+      "-pedantic",
+      "-c",
+      "trx.c",
+      "-o",
+      "trx.o"
+    ],
+    "directory": "/home/arno/src/trx",
+    "file": "/home/arno/src/trx/trx.c",
+    "output": "/home/arno/src/trx/trx.o"
+  }
+]
