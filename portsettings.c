@@ -10,10 +10,10 @@
 
 void portsettings_print(const portsettings_t* portsettings)
 {
-    if (portsettings->port) printf("port     = %s\n", portsettings->port);
-    else printf("port     = none\n");
-    printf("baudrate = %lu\n", portsettings->baudrate);
-    printf("wait     = %i\n", portsettings->wait);
-    printf("count    = %i\n", portsettings->count);
+    if (portsettings->port) printf("%-12s = %s\n", "port", portsettings->port);
+    else printf("%-12s = none\n", "port");
+    printf("%-12s = %lu\n", "baudrate", portsettings->baudrate);
+    printf("%-12s = %f\n", "wait", portsettings->wait);
+    printf("%-12s = %i\n", "count", portsettings->count);
 }
 

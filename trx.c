@@ -15,7 +15,6 @@
 #include "serial.h"
 
 #define CMD_LEN 80
-#define DEFAULT_WAIT 500
 
 extern char **environ;
 extern int errno ;
@@ -28,11 +27,6 @@ struct settings {
     int quiet;
     int help;
 } settings;
-
-struct command {
-    char *v;
-    size_t len;
-} command;
 
 
 /* arg options */
@@ -53,15 +47,15 @@ struct option long_options[] = {
 void print_settings()
 {
     if (settings.input)
-        printf("input    = %s\n", settings.input);
+        printf("%-12s = %s\n", "input", settings.input);
     if (settings.output)
-        printf("output   = %s\n", settings.output);
+        printf("%-12s = %s\n", "output", settings.output);
     if (settings.device)
-        printf("device   = %s\n", settings.device);
+        printf("%-12s = %s\n", "device", settings.device);
     if (1) {
-        printf("verbose  = %i\n", settings.verbose);
-        printf("quiet    = %i\n", settings.quiet);
-        printf("help     = %i\n", settings.help);
+        printf("%-12s = %i\n", "verbose", settings.verbose);
+        printf("%-12s = %i\n", "quiet", settings.quiet);
+        printf("%-12s = %i\n", "help", settings.help);
     }
 }
 
@@ -108,10 +102,10 @@ int parse_config(portsettings_t* portsettings, FILE *file)
         } else if (!portsettings->wait && (strcmp(p, "wait") == 0)) {
             p = strtok(NULL, "= \r\n");
             if (p) {
-                portsettings->wait = atoi(p);
+                portsettings->wait = atof(p);
                 if (!portsettings->wait) {
                     fprintf(stderr,
-                            "invalid \"wait\" value: %i\n",
+                            "invalid \"wait\" value: %f\n",
                             portsettings->wait);
                     return -1;
                 }
@@ -133,17 +127,37 @@ int parse_config(portsettings_t* portsettings, FILE *file)
     return 0;
 }
 
+int run(const portsettings_t* portsettings, const char* cmd)
+{
+    serial_tx(portsettings, cmd);
+
+    char buf[81];
+    unsigned int n = 0;
+
+    while (n < portsettings->count) {
+        if (serial_rx(portsettings, buf, 80) != -1) {
+            if (!settings.quiet) {
+                if (settings.verbose) printf("%-12s = %s\n", "response", buf);
+                else printf("%s\n", buf);
+            }
+            n++;
+        }
+        else break;
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     portsettings_t portsettings = { 0 };
     FILE *input_file = NULL;
     FILE *output_file = NULL;
 
-    command.v = calloc(CMD_LEN, 1);
-    command.len = CMD_LEN;
+    /* command.v = calloc(CMD_LEN, 1); */
+    /* command.len = CMD_LEN; */
 
     /* defaults */
-    portsettings.wait = DEFAULT_WAIT;
+    portsettings.wait = 1;
     portsettings.count = -1;
 
     /* parse options */
@@ -173,7 +187,7 @@ int main(int argc, char **argv)
                 break;
 
             case 'w':
-                portsettings.wait = atoi(optarg);
+                portsettings.wait = atof(optarg);
                 break;
 
             case 'n':
@@ -198,16 +212,6 @@ int main(int argc, char **argv)
         }
     }
 
-    /* first remaining arg is command */
-    while (optind < argc) {
-        if (strlen(argv[optind]) > command.len - strlen(command.v)) {
-            command.v = realloc(command.v, command.len*2);
-            command.len *= 2;
-        }
-        strcat(command.v, argv[optind]);
-        optind++;
-    }
-
     /* read config file (device) */
     if (settings.device) {
 
@@ -225,52 +229,66 @@ int main(int argc, char **argv)
         }
     }
 
-    /* input file */
-    if (settings.input) {
-        input_file = fopen(settings.input, "r");
-        if (input_file) {
-            printf("using input file \'%s\"\n", settings.input);
-        } else {
-            fprintf(stderr, "%s \"%s\"\n", strerror(errno), settings.device);
-            exit(EXIT_FAILURE);
-        }
-    }
 
-    print_settings();
-    printf("\n");
-    portsettings_print(&portsettings);
-    if (command.v && *command.v) printf("command  = %s\n", command.v);
+
+    /* verbose print */
+    if (settings.verbose) {
+        print_settings();
+        portsettings_print(&portsettings);
+    }
 
     /* init serial port */
     if (serial_init(&portsettings) == -1) {
         exit(EXIT_FAILURE);
     }
 
-    char buf[81];
-    serial_tx(&portsettings, command.v);
+    /* run arg commands */
+    for (size_t i = optind; i < argc; i++) {
+        if (settings.verbose) printf("%-12s = %s\n", "command", argv[i]);
+        run(&portsettings, argv[i]);
+    }
 
-    int counter = 0;
-    unsigned int n = 0;
+    /* run input file */
+    if (settings.input) {
+        input_file = fopen(settings.input, "r");
+        if (input_file) {
 
-    while (counter < portsettings.wait && n < portsettings.count) {
-        if (serial_rx(&portsettings, buf, 80) != -1) {
-            printf("response: %s\n", buf);
-            counter = 0;
-            n++;
+            char line[CMD_LEN+2];
+
+            if (settings.verbose) printf("using input file \'%s\"\n", settings.input);
+
+            while (fgets(line, CMD_LEN+1, input_file)) {
+
+                /* filter comments and empty lines */
+                if (*line == '#' || *line == '\n') continue;
+
+                /* validate max line length */
+                if (strlen(line) >= CMD_LEN) {
+                    fprintf(stderr,
+                            "maximum line length exceeded: %i characters\n",
+                            CMD_LEN);
+                    return -1;
+                }
+
+                /* trim trailing newlines */
+                if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
+
+                if (settings.verbose) printf("%-12s = %s\n", "command", line);
+                run(&portsettings, line);
+            }
+
+            fclose(input_file);
+
         } else {
-            printf("counter: %i\n", counter);
-            usleep(1000);
-            counter++;
+            fprintf(stderr, "%s \"%s\"\n", strerror(errno), settings.device);
+            exit(EXIT_FAILURE);
         }
     }
 
-
     /* die */
     serial_die();
-    if (input_file) fclose(input_file);
     if (output_file) fclose(output_file);
     /* if (output_file) fclose(output_file); */
-    if (command.v) free(command.v);
     if (portsettings.port) free(portsettings.port);
     exit(EXIT_SUCCESS);
 }

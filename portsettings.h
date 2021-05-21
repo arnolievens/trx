@@ -10,7 +10,7 @@
 typedef struct {
     unsigned long baudrate;
     char *port;
-    int wait;
+    double wait;
     unsigned int count;
 } portsettings_t;
 

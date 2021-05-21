@@ -19,7 +19,7 @@
 
 int fd;
 
-int serial_init(portsettings_t* portsettings)
+int serial_init(const portsettings_t* portsettings)
 {
     /* try to open file descriptor */
     if ((fd = open(portsettings->port, O_RDWR | O_NOCTTY | O_NDELAY)) == -1) {
@@ -52,8 +52,8 @@ int serial_init(portsettings_t* portsettings)
     tty.c_cflag &= ~CSTOPB;     /* only need 1 stop bit */
     /* tty.c_cflag &= ~CRTSCTS;    [> no hardware flowcontrol <] */
 
-    tty.c_lflag |= ICANON | ISIG;  /* canonical input */
-    //tty.c_lflag &= ~(ICANON | ISIG);  /* NON-canonical input!! */
+    /* tty.c_lflag |= ICANON | ISIG;  [> canonical input <] */
+    tty.c_lflag &= ~(ICANON | ISIG);  /* NON-canonical input!! */
 
     tty.c_lflag &= ~(ECHO | ECHOE | ECHONL | IEXTEN);
 
@@ -68,6 +68,9 @@ int serial_init(portsettings_t* portsettings)
     tty.c_cc[VEOL2] = 0;
     tty.c_cc[VEOF] = 0x04;
 
+    tty.c_cc[VTIME]    = portsettings->wait * 10;     /* inter-character timer unused */
+    tty.c_cc[VMIN]     = 0;     /* blocking read until 1 character arrives */
+
     // write settings to port
     if (tcsetattr(fd, TCSANOW, &tty) == -1) {
         fprintf(stderr, "error setting serial port settings: %s\n",
@@ -77,7 +80,7 @@ int serial_init(portsettings_t* portsettings)
     return 1;
 }
 
-int serial_tx(portsettings_t* portsettings, const char *cmd) {
+int serial_tx(const portsettings_t* portsettings, const char *cmd) {
     int len = strlen(cmd);
     ssize_t n = write(fd, cmd, len);
     write(fd, "\r", 1);
@@ -88,7 +91,7 @@ int serial_tx(portsettings_t* portsettings, const char *cmd) {
     return n;
 }
 
-int serial_rx(portsettings_t* portsettings, char *buf, size_t size)
+int serial_rx(const portsettings_t* portsettings, char *buf, size_t size)
 {
     char *eol = NULL;
     *buf = '\0';
@@ -108,7 +111,7 @@ int serial_rx(portsettings_t* portsettings, char *buf, size_t size)
             return -1;
 
         } else {
-            return 0;
+            return -1;
         }
     }
     /* trim \n char */
