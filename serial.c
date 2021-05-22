@@ -124,7 +124,7 @@ int serial_rx(const portsettings_t* portsettings, char *buf, size_t size)
         }
     }
     /* trim \n char */
-    *eol = '\0';
+    /* *eol = '\0'; */
     return 0;
 }
 
