@@ -82,21 +82,16 @@ int parse_config(portsettings_t* portsettings, FILE *file)
 
         if (!portsettings->port && (strcmp(p, "port") == 0)) {
             p = strtok(NULL, "= \r\n");
-            if (p) {
-                portsettings->port = calloc(81, 1);
-                strcpy(portsettings->port, p);
+            if (portsettings_set_port(portsettings, p) == -1) {
+                fprintf(stderr, "invalid serial port: %s\n", p);
+                exit(EXIT_FAILURE);
             }
 
         } else if (!portsettings->baudrate && (strcmp(p, "baudrate") == 0)) {
             p = strtok(NULL, "= \r\n");
-            if (p) {
-                portsettings->baudrate = atol(p);
-                if (!portsettings->baudrate) {
-                    fprintf(stderr,
-                            "illegal baudrate setting: %lu\n",
-                            portsettings->baudrate);
-                    return -1;
-                }
+            if (portsettings_set_baudrate(portsettings, p) == -1) {
+                fprintf(stderr, "invalid baudrate: %s\n", p);
+                return -1;
             }
 
         } else if (!portsettings->wait && (strcmp(p, "wait") == 0)) {
@@ -178,12 +173,20 @@ int main(int argc, char **argv)
                 break;
 
             case 'b':
-                portsettings.baudrate = atol(optarg);
-                break;
+                if (portsettings_set_baudrate(&portsettings, optarg) != -1) {
+                    break;
+                } else {
+                    fprintf(stderr, "invalid baudrate: %s\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
 
             case 'p':
-                portsettings.port = calloc(strlen(optarg)+1, 1);
-                strcpy(portsettings.port, optarg);
+                if (portsettings_set_port(&portsettings, optarg) != -1) {
+                    break;
+                } else {
+                    fprintf(stderr, "invalid serial port: %s\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
                 break;
 
             case 'w':
@@ -287,8 +290,8 @@ int main(int argc, char **argv)
 
     /* die */
     serial_die();
+    portsettings_die(&portsettings);
     if (output_file) fclose(output_file);
     /* if (output_file) fclose(output_file); */
-    if (portsettings.port) free(portsettings.port);
     exit(EXIT_SUCCESS);
 }

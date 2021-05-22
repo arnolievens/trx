@@ -3,13 +3,13 @@
 a command line serial transceiver utility
 allows transmitting and simultaneously receiving serial commands
 
-## usage
+### usage
 
 ```sh
 trx [options] [commands]
 ```
 
-## install
+### install
 
 ```sh
 make clean install

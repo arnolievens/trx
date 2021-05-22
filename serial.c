@@ -40,9 +40,8 @@ int serial_init(const portsettings_t* portsettings)
     }
 
     /* set IO speed */
-    speed_t baudrate = (speed_t)portsettings->baudrate;
-    cfsetospeed(&tty, baudrate);
-    cfsetispeed(&tty, baudrate);
+    cfsetospeed(&tty, portsettings->baudrate);
+    cfsetispeed(&tty, portsettings->baudrate);
 
     /* set port paratmeters */
     tty.c_cflag |= CLOCAL | CREAD;
