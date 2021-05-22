@@ -36,7 +36,7 @@ struct option long_options[] = {
     {"output",    required_argument,  NULL,  'o'},
     {"baudrate",  required_argument,  NULL,  'b'},
     {"port",      required_argument,  NULL,  'p'},
-    {"wait",      required_argument,  NULL,  'w'},
+    {"timeout",   required_argument,  NULL,  'w'},
     {"count",     required_argument,  NULL,  'n'},
     {"verbose",   no_argument,        NULL,  'v'},
     {"quiet",     no_argument,        NULL,  'q'},
@@ -94,18 +94,12 @@ int parse_config(portsettings_t* portsettings, FILE *file)
                 return -1;
             }
 
-        } else if (!portsettings->wait && (strcmp(p, "wait") == 0)) {
+        } else if (!portsettings->timeout && (strcmp(p, "timeout") == 0)) {
             p = strtok(NULL, "= \r\n");
-            if (p) {
-                portsettings->wait = atof(p);
-                if (!portsettings->wait) {
-                    fprintf(stderr,
-                            "invalid \"wait\" value: %f\n",
-                            portsettings->wait);
-                    return -1;
-                }
+            if (portsettings_set_timeout(portsettings, p) == -1) {
+                fprintf(stderr, "invalid timeout: %s\n", p);
+                return -1;
             }
-
         } else if (!portsettings->count && (strcmp(p, "count") == 0)) {
             p = strtok(NULL, "= \r\n");
             if (p) {
@@ -157,13 +151,13 @@ int main(int argc, char **argv)
     /* command.len = CMD_LEN; */
 
     /* defaults */
-    portsettings.wait = 1;
+    portsettings.timeout = 1;
     portsettings.count = -1;
 
     /* parse options */
     int oc;
     int oi = 0;
-    while ((oc = getopt_long(argc, argv, "d:i:o:b:p:w:n:vqh", long_options, &oi)) != -1) {
+    while ((oc = getopt_long(argc, argv, "d:i:o:b:p:t:n:vqh", long_options, &oi)) != -1) {
         switch (oc) {
             case 'd':
                 settings.device = optarg;
@@ -193,9 +187,13 @@ int main(int argc, char **argv)
                     exit(EXIT_FAILURE);
                 }
 
-            case 'w':
-                portsettings.wait = atof(optarg);
-                break;
+            case 't':
+                if (portsettings_set_timeout(&portsettings, optarg) != -1) {
+                    break;
+                } else {
+                    fprintf(stderr, "invalid timeout: %s\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
 
             case 'n':
                 portsettings.count = atoi(optarg);

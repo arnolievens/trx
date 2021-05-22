@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <string.h>
 
 int portsettings_set_baudrate(portsettings_t* portsettings, const char* str)
 {
@@ -38,12 +39,20 @@ int portsettings_set_port(portsettings_t* portsettings, const char* str)
     return access(portsettings->port, F_OK);
 }
 
+int portsettings_set_timeout(portsettings_t* portsettings, const char* str)
+{
+    double timeout = atof(str);
+    if (timeout <= 0) return -1;
+    portsettings->timeout = timeout;
+    return 0;
+}
+
 void portsettings_print(const portsettings_t* portsettings)
 {
     if (portsettings->port) printf("%-12s = %s\n", "port", portsettings->port);
     else printf("%-12s = none\n", "port");
     printf("%-12s = %i\n", "baudrate", portsettings->baudrate);
-    printf("%-12s = %f\n", "wait", portsettings->wait);
+    printf("%-12s = %f\n", "wait", portsettings->timeout);
     printf("%-12s = %i\n", "count", portsettings->count);
 }
 

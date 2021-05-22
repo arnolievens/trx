@@ -110,8 +110,8 @@ int serial_rx(const portsettings_t* portsettings, char *buf, size_t size)
     FD_SET(fd, &set); /* add our file descriptor to the set */
 
     struct timeval timeout;
-    timeout.tv_usec = 0;
-    timeout.tv_sec  = (int)portsettings->wait;
+    timeout.tv_sec  = 0;
+    timeout.tv_usec = portsettings->timeout * 1000000.0;
 
     *buf = '\0';
 

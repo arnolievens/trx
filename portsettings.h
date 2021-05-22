@@ -12,15 +12,15 @@
 typedef struct {
     speed_t baudrate;
     char *port;
-    double wait;
+    double timeout;
     unsigned int count;
 } portsettings_t;
 
 extern void portsettings_print(const portsettings_t* portsettings);
 extern int portsettings_set_baudrate(portsettings_t* portsettings, const char* str);
 extern int portsettings_set_port(portsettings_t* portsettings, const char* str);
+extern int portsettings_set_timeout(portsettings_t* portsettings, const char* str);
 extern void portsettings_die(portsettings_t* portsettings);
-
 
 #endif
 
