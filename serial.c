@@ -61,8 +61,8 @@ int serial_init(const portsettings_t* portsettings)
     tty.c_cflag &= ~CSTOPB;     /* only need 1 stop bit */
     /* tty.c_cflag &= ~CRTSCTS;    [> no hardware flowcontrol <] */
 
-    /* tty.c_lflag |= ICANON | ISIG;  [> canonical input <] */
-    tty.c_lflag &= ~(ICANON | ISIG);  /* NON-canonical input!! */
+    tty.c_lflag |= ICANON | ISIG;  /* canonical input */
+    /* tty.c_lflag &= ~(ICANON | ISIG);  [> NON-canonical input!! <] */
 
     tty.c_lflag &= ~(ECHO | ECHOE | ECHONL | IEXTEN);
 
@@ -124,7 +124,7 @@ int serial_rx(const portsettings_t* portsettings, char *buf, size_t size)
         }
     }
     /* trim \n char */
-    /* *eol = '\0'; */
+    *eol = '\0';
     return 0;
 }
 
