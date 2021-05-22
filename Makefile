@@ -11,7 +11,7 @@ MANPREFIX = ${PREFIX}/share/man
 LIBS =
 INCL =
 CC = gcc
-CFLAGS = -Wall -std=gnu99 -pedantic
+CFLAGS = -Wall -std=gnu99 -pedantic -g
 
 .PHONY: default all clean
 
