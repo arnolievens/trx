@@ -3,16 +3,49 @@
 trx \- commandline serial transceiver
 .SH SYNOPSIS
 .B trx
-.RB [ \-TODO:OPTIONS ]
+.RB [ \-bptndiovqh ]
 .SH DESCRIPTION
 trx is a commandline serial port transceiver.
-transmit a command to a serial port and wait for response
+Transmit a command to a serial port and wait for response
 .SH OPTIONS
+.SS serial port
 .TP
-.B \-h
-help menu
-.SH USAGE
-.SS Usage
+.B \-b, --baudrate
+serial port baudrate setting (must be valid)" eg 9600, 19200, ...
 .TP
-.B foo
-foooooosage
+.B \-p, --port
+serial port device file - eg /dev/ttyS0
+.TP
+.B \-t, --timeout
+receiver will wait <timeout> msec for new input unless count is fulfilled
+.TP
+.B \-n, --count
+max number of lines to be read
+.TP
+.B \-d, --device
+read serial device settings from config file
+.BR
+when no absolue path is given, look in $XDG_CONFIG_HOME/trs/ or /etc/trs/
+.SS general
+.TP
+.B \-i, --input
+read commands from file line by line
+.TP
+.B \-o, --output
+write response to file
+.TP
+.B \-v, --verbose
+verbose output
+.TP
+.B \-q, --quiet
+suppress stdout, does not mute stderr
+.TP
+.B \-h, --help
+print help menu
+.SH EXAMPLES
+.TP
+trx -d someDevice --timeout 0.2 -n 1 "some command"
+.TP
+trx -p /dev/ttyS0 -i transmit.txt -q
+.TP
+trx -d ./dev.config "cmd1" "cmd2"

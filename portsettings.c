@@ -4,19 +4,30 @@
  * @filename    : portsettings.c
  */
 
-#include "portsettings.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <string.h>
+
+#include "portsettings.h"
+
+portsettings_t portsettings_default(void)
+{
+    portsettings_t portsettings = {
+        .baudrate = 0,
+        .count = -1,
+        .port = NULL,
+        .timeout = 1,
+    };
+    return portsettings;
+}
 
 int portsettings_set_baudrate(portsettings_t* portsettings, const char* str)
 {
     speed_t baudrate = 0;
     if (!str || !*str) return -1;
 
+    /* TODO: add all valid baudrates */
     switch (atol(str)) {
         case 2400: baudrate = B2400; break;
         case 4800: baudrate = B4800; break;
@@ -41,9 +52,9 @@ int portsettings_set_port(portsettings_t* portsettings, const char* str)
 
 int portsettings_set_timeout(portsettings_t* portsettings, const char* str)
 {
-    double timeout = atof(str);
-    if (timeout <= 0) return -1;
-    portsettings->timeout = timeout;
+    double d = atof(str);
+    if (d < 0) return -1;
+    portsettings->timeout = d;
     return 0;
 }
 
@@ -51,13 +62,16 @@ void portsettings_print(const portsettings_t* portsettings)
 {
     if (portsettings->port) printf("%-12s = %s\n", "port", portsettings->port);
     else printf("%-12s = none\n", "port");
+
     printf("%-12s = %i\n", "baudrate", portsettings->baudrate);
-    printf("%-12s = %f\n", "wait", portsettings->timeout);
+    printf("%-12s = %f\n", "timeout", portsettings->timeout);
     printf("%-12s = %i\n", "count", portsettings->count);
 }
 
 void portsettings_die(portsettings_t* portsettings)
 {
-    if (portsettings->port) free(portsettings->port);
-    portsettings->port = NULL;
+    if (portsettings->port) {
+        free(portsettings->port);
+        portsettings->port = NULL;
+    }
 }

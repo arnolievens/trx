@@ -16,6 +16,8 @@
 
 #define CMD_LEN 80
 
+#define LENGTH(a) sizeof(a)/sizeof(a[0])
+
 extern char **environ;
 extern int errno ;
 
@@ -43,6 +45,45 @@ struct option long_options[] = {
     {"help",      no_argument,        NULL,  'h'},
     {NULL,        0,                  NULL,  0}
 };
+
+void print_help()
+{
+    const char* help[] = {
+        "usage: trx [options] [command] [command] [...]",
+        "",
+        "  -b  --baudrate  serial port baudrate setting (must be valid)",
+        "                  eg 9600, 19200, ...",
+        "",
+        "  -p  --port      serial port device file",
+        "",
+        "  -t  --timeout   receiver will wait <timeout> msec for new input",
+        "                  unless count is fulfilled",
+        "",
+        "  -n  --count     max number of lines to be read",
+        "",
+        "  -d  --device    device config file",
+        "                  search in $XDG_CONFIG_HOME when no abs path given",
+        "",
+        "  -i  --input     contents of this file will be transmitted per line",
+        "                  as if they are given as separate arguments",
+        "",
+        "  -o  --output    response is written to file instead of stdout",
+        "",
+        "  -v  --verbose   verbose output",
+        "",
+        "  -q  --quiet     suppress writing response to stdout",
+        "                  does not mute stderr",
+        "",
+        "  -h  --help      this menu",
+        "",
+        "examples:",
+        "  trx -d someDevice --timeout 0.2 -n 1 \"some command\"",
+        "  trx -p /dev/ttyS0 -i transmit.txt -q",
+        "  trx -d ./dev.config \"cmd1\" \"cmd2\"",
+        "",
+    };
+    for (size_t i = 0; i < LENGTH(help); i++) printf("%s\n", help[i]);
+}
 
 void print_settings()
 {
@@ -143,34 +184,17 @@ int run(const portsettings_t* portsettings, const char* cmd)
 
 int main(int argc, char **argv)
 {
-    portsettings_t portsettings = { 0 };
     FILE *input_file = NULL;
     FILE *output_file = NULL;
-
-    /* command.v = calloc(CMD_LEN, 1); */
-    /* command.len = CMD_LEN; */
-
-    /* defaults */
-    portsettings.timeout = 1;
-    portsettings.count = -1;
+    portsettings_t portsettings = portsettings_default();
 
     /* parse options */
     int oc;
     int oi = 0;
     while ((oc = getopt_long(argc, argv, "d:i:o:b:p:t:n:vqh", long_options, &oi)) != -1) {
         switch (oc) {
-            case 'd':
-                settings.device = optarg;
-                break;
 
-            case 'i':
-                settings.input = optarg;
-                break;
-
-            case 'o':
-                settings.output = optarg;
-                break;
-
+            /* port settings */
             case 'b':
                 if (portsettings_set_baudrate(&portsettings, optarg) != -1) {
                     break;
@@ -199,6 +223,19 @@ int main(int argc, char **argv)
                 portsettings.count = atoi(optarg);
                 break;
 
+            /* program settings */
+            case 'd':
+                settings.device = optarg;
+                break;
+
+            case 'i':
+                settings.input = optarg;
+                break;
+
+            case 'o':
+                settings.output = optarg;
+                break;
+
             case 'v':
                 settings.verbose = 1;
                 break;
@@ -208,8 +245,8 @@ int main(int argc, char **argv)
                 break;
 
             case 'h':
-                settings.help = 1;
-                break;
+                print_help();
+                exit(EXIT_SUCCESS);
 
             default:
                 fprintf(stderr, "getopts error - unknown option: %c\n", oc);

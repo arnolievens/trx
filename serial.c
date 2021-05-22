@@ -7,15 +7,13 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <libgen.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
-#include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <termios.h>
+#include <unistd.h>
 
 #include "serial.h"
 
@@ -56,31 +54,40 @@ int serial_init(const portsettings_t* portsettings)
     cfsetispeed(&tty, portsettings->baudrate);
 
     /* set port paratmeters */
-    tty.c_cflag |= CLOCAL | CREAD;
-    tty.c_cflag &= ~CSIZE;
-    tty.c_cflag |= CS8;         /* 8-bit characters */
-    tty.c_cflag &= ~PARENB;     /* no parity bit */
-    tty.c_cflag &= ~CSTOPB;     /* only need 1 stop bit */
-    /* tty.c_cflag &= ~CRTSCTS;    [> no hardware flowcontrol <] */
-
-    tty.c_lflag |= ICANON | ISIG;  /* canonical input */
-    /* tty.c_lflag &= ~(ICANON | ISIG);  [> NON-canonical input!! <] */
-
-    tty.c_lflag &= ~(ECHO | ECHOE | ECHONL | IEXTEN);
-
-    //tty.c_iflag &= ~IGNCR;  /* preserve carriage return */
-    tty.c_iflag &= ~INPCK;
-    tty.c_iflag &= ~(INLCR | ICRNL | IUCLC | IMAXBEL);
-    tty.c_iflag &= ~(IXON | IXOFF | IXANY);   /* no SW flowcontrol */
-
-    tty.c_oflag &= ~OPOST;
-
-    tty.c_cc[VEOL] = 0;
-    tty.c_cc[VEOL2] = 0;
-    tty.c_cc[VEOF] = 0x04;
-
-    tty.c_cc[VTIME]    = 0;     /* inter-character timer unused */
-    tty.c_cc[VMIN]     = 0;     /* blocking read until 1 character arrives */
+    tty.c_cflag |=                  CLOCAL | CREAD;
+    /* ?? */
+    tty.c_cflag &=                  ~CSIZE;
+    /* 8-bit characters */
+    tty.c_cflag |=                  CS8;
+    /* no parity bit */
+    tty.c_cflag &=                  ~PARENB;
+    /* only need 1 stop bit */
+    tty.c_cflag &=                  ~CSTOPB;
+    /* no hardware flowcontrol  */
+    /* tty.c_cflag &=               ~CRTSCTS; */
+    /* canonical input */
+    tty.c_lflag |=                  ICANON | ISIG;
+    /* NON-canonical input!! <] */
+    /* tty.c_lflag &=               ~(ICANON | ISIG);*/
+    /* echo */
+    tty.c_lflag &=                  ~(ECHO | ECHOE | ECHONL | IEXTEN);
+    /* preserve carriage return */
+    /* tty.c_iflag &=               ~IGNCR; */
+    /* ?? */
+    tty.c_iflag &=                  ~INPCK;
+    /* ?? */
+    tty.c_iflag &=                  ~(INLCR | ICRNL | IUCLC | IMAXBEL);
+    /* SW fdlow-control */
+    tty.c_iflag &=                  ~(IXON | IXOFF | IXANY);
+    /* ?? */
+    tty.c_oflag &=                  ~OPOST;
+    /* alt eol characters */
+    tty.c_cc[VEOL] =                0;
+    tty.c_cc[VEOL2] =               0;
+    tty.c_cc[VEOF] =                0x04;
+    /* non-blocking behaviour */
+    tty.c_cc[VTIME] =               0;
+    tty.c_cc[VMIN] =                0;
 
     // write settings to port
     if (tcsetattr(fd, TCSANOW, &tty) == -1) {
@@ -106,14 +113,15 @@ int serial_rx(const portsettings_t* portsettings, char *buf, size_t size)
 {
     ssize_t n = 0;
     fd_set set;
-    FD_ZERO(&set); /* clear the set */
-    FD_SET(fd, &set); /* add our file descriptor to the set */
-
-    struct timeval timeout;
-    timeout.tv_sec  = 0;
-    timeout.tv_usec = portsettings->timeout * 1000000.0;
+    FD_ZERO(&set);
+    FD_SET(fd, &set);
 
     *buf = '\0';
+
+    struct timeval timeout = {
+        .tv_sec = 0,
+        .tv_usec = 1000000.0 * portsettings->timeout,
+    };
 
     switch (select(fd+1, &set, NULL, NULL, &timeout)) {
 
