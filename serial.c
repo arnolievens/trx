@@ -14,6 +14,8 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 #include "serial.h"
 
@@ -77,7 +79,7 @@ int serial_init(const portsettings_t* portsettings)
     tty.c_cc[VEOL2] = 0;
     tty.c_cc[VEOF] = 0x04;
 
-    tty.c_cc[VTIME]    = portsettings->wait * 10;     /* inter-character timer unused */
+    tty.c_cc[VTIME]    = 0;     /* inter-character timer unused */
     tty.c_cc[VMIN]     = 0;     /* blocking read until 1 character arrives */
 
     // write settings to port
@@ -102,35 +104,54 @@ int serial_tx(const portsettings_t* portsettings, const char *cmd) {
 
 int serial_rx(const portsettings_t* portsettings, char *buf, size_t size)
 {
-    char *eol = NULL;
+    ssize_t n = 0;
+    fd_set set;
+    FD_ZERO(&set); /* clear the set */
+    FD_SET(fd, &set); /* add our file descriptor to the set */
+
+    struct timeval timeout;
+    timeout.tv_usec = 0;
+    timeout.tv_sec  = (int)portsettings->wait;
+
     *buf = '\0';
 
-    while (!eol) {
+    switch (select(fd+1, &set, NULL, NULL, &timeout)) {
 
-        ssize_t n = read(fd, buf, size - 1);
+        /* error select() */
+        case -1:
+            fprintf(stderr, "error selecting port: %s\n" , strerror(errno));
+            break;
 
-        if (n > 0) {
-            eol = strchr(buf, '\n');
-            buf += n;
-            size -= n;
+        /* timeout occured - return 0 but empty buffer */
+        case 0:
+            return 0;
 
-        } else if (n < 0) {
-            fprintf(stderr, "Error reading from serial port\n");
-            *buf = '\0';
-            return -1;
+        /* available for reading */
+        default: {
 
-        } else {
-            return -1;
+            /* read from serial port */
+            n = read(fd, buf, size-1);
+            if (n > 0) {
+                /* trim CRLF */
+                *(strchr(buf, '\n')) = '\0';
+                *(strchr(buf, '\r')) = '\0';
+                return 0;
+
+            /* read() error */
+            } else if (n < 0) {
+                fprintf(stderr, "error reading port: %s\n" , strerror(errno));
+                break;
+
+            /* read should never return 0 as read is canonical (blocking) */
+            } else {
+                printf("read() returned 0, this should not happen??\n");
+                break;
+            }
         }
     }
-    /* trim \n char */
-    *eol = '\0';
-    return 0;
+    return -1;
 }
 
 void serial_die(void) {
     if (fd) close(fd);
 }
-
-
-
