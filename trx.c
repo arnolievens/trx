@@ -133,10 +133,12 @@ int run(const portsettings_t* portsettings, const char* cmd)
         if (serial_rx(portsettings, buf, 80) != -1) {
             if (!settings.quiet) {
                 if (settings.verbose) printf("%-12s = ", "response");
-                if (*buf)
+                if (*buf) {
                     printf("%s\n", buf);
-                else
+                } else {
                     if (settings.verbose) printf("<timeout>\n");
+                    break;
+                }
             }
             n++;
         }
