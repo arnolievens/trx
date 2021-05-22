@@ -5,7 +5,7 @@ Transmit a command to a serial port and wait for response
 
 ### usage
 
-```sh
+```
 trx [options] [command] [command] [...]
 
   -b  --baudrate  serial port baudrate setting (must be valid)
