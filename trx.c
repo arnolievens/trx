@@ -187,7 +187,6 @@ int main(int argc, char **argv)
                     fprintf(stderr, "invalid serial port: %s\n", optarg);
                     exit(EXIT_FAILURE);
                 }
-                break;
 
             case 'w':
                 portsettings.wait = atof(optarg);
@@ -231,8 +230,6 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
     }
-
-
 
     /* verbose print */
     if (settings.verbose) {

@@ -21,9 +21,19 @@ int fd;
 
 int serial_init(const portsettings_t* portsettings)
 {
+    if (!portsettings->port) {
+        fprintf(stderr, "please provide serial port\n");
+        return -1;
+    }
+
+    if (!portsettings->baudrate) {
+        fprintf(stderr, "please specify baudrate\n");
+        return -1;
+    }
+
     /* try to open file descriptor */
     if ((fd = open(portsettings->port, O_RDWR | O_NOCTTY | O_NDELAY)) == -1) {
-        fprintf(stderr, "unable to open %s: %s\n",
+        fprintf(stderr, "invalid serial port: %s: %s\n",
                 portsettings->port,
                 strerror(errno));
         return -1;

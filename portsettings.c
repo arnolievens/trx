@@ -32,8 +32,8 @@ int portsettings_set_port(portsettings_t* portsettings, const char* str)
 {
     if (!str || !*str) return -1;
 
-    portsettings->port = calloc(strlen(str), 1);
-    strncpy(portsettings->port, str, strlen(str));
+    portsettings->port = calloc(strlen(str)+1, 1);
+    strcpy(portsettings->port, str);
 
     return access(portsettings->port, F_OK);
 }
