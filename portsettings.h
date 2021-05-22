@@ -44,7 +44,7 @@ extern void portsettings_print(const portsettings_t* portsettings);
 extern int portsettings_set_baudrate(portsettings_t* portsettings, const char* baudrate);
 
 /**
- * set baudrate
+ * set port
  *
  * @param[out] portsettings object in which port will be updated
  * @param[in] port serial device - validated before setting
@@ -53,7 +53,7 @@ extern int portsettings_set_baudrate(portsettings_t* portsettings, const char* b
 extern int portsettings_set_port(portsettings_t* portsettings, const char* port);
 
 /**
- * set baudrate
+ * set timeout
  *
  * @param[out] portsettings object in which timeout will be updated
  * @param[in] timeout string containing a positive double value or 0
