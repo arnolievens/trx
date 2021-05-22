@@ -1,4 +1,4 @@
-% TRX(1) trx 1.0
+% TRX(1) trx VERSION
 % Arno Lievens
 % May 2021
 

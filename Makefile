@@ -11,7 +11,7 @@ MANPREFIX = ${PREFIX}/share/man
 LIBS =
 INCL =
 CC = gcc
-CFLAGS = -Wall -std=gnu99 -pedantic -g
+CFLAGS = -Wall -std=gnu99 -pedantic
 
 .PHONY: default all clean
 
@@ -35,12 +35,17 @@ clean:
 	-rm -f *.o
 	-rm -f $(TARGET)
 
-install: all
+man:
+	pandoc $(TARGET).md -s -t man -o $(TARGET).1
+	sed -i "s/VERSION/${VERSION}/g" $(TARGET).1
+
+
+install: all man
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f $(TARGET) ${DESTDIR}${PREFIX}/bin
 	chmod 755 ${DESTDIR}${PREFIX}/bin/$(TARGET)
 	mkdir -p ${DESTDIR}${MANPREFIX}/man1
-	sed "s/VERSION/${VERSION}/g" < $(TARGET).1 > ${DESTDIR}${MANPREFIX}/man1/$(TARGET).1
+	cp -f $(TARGET).1 ${DESTDIR}${MANPREFIX}/man1/$(TARGET).1
 	chmod 644 ${DESTDIR}${MANPREFIX}/man1/$(TARGET).1
 
 uninstall:
