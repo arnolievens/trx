@@ -171,7 +171,7 @@ char* find_file(const char* file, const char* ext)
     char buf[CMD_LEN+1];
 
     /* already absolute path */
-    if (access(file, R_OK) != -1) {
+    if (access(file, F_OK) != -1) {
         path = malloc(strlen(file)+1);
         strcpy(path, file);
         return path;
@@ -182,7 +182,7 @@ char* find_file(const char* file, const char* ext)
     strcat(buf, "/.config/trx/");
     strcat(buf, file);
     strcat(buf, ext);
-    if (access(buf, R_OK) != -1) {
+    if (access(buf, F_OK) != -1) {
         path = malloc(strlen(buf)+1);
         strcpy(path, buf);
         return path;
@@ -193,7 +193,7 @@ char* find_file(const char* file, const char* ext)
     strcat(buf, "/.trx/");
     strcat(buf, file);
     strcat(buf, ext);
-    if (access(buf, R_OK) != -1) {
+    if (access(buf, F_OK) != -1) {
         path = malloc(strlen(buf)+1);
         strcpy(path, buf);
         return path;
@@ -204,7 +204,7 @@ char* find_file(const char* file, const char* ext)
     strcat(buf, "/trx/");
     strcat(buf, file);
     strcat(buf, ext);
-    if (access(buf, R_OK) != -1) {
+    if (access(buf, F_OK) != -1) {
         path = malloc(strlen(buf)+1);
         strcpy(path, buf);
         return path;
