@@ -21,7 +21,34 @@ timeout \f[B](-t)\f[R] to detect the end of transmission
 .P
 .PD
 Device configuration is setup by means of options flags
-\f[B](-pbnt)\f[R] or read from a device config file \f[B](-i)\f[R]
+\f[B](-pbnt)\f[R] or read from a device config file \f[B](-d)\f[R]
+.PD 0
+.P
+.PD
+Multiple commands can be given in the command arguments or
+alternatively, a file can be specified (\f[B]-i\f[R])
+.PD 0
+.P
+.PD
+When an input file is provided as wel as one or more argument commands,
+the latter will be sent prior to reading the input file
+.PD 0
+.P
+.PD
+The device config or command file may be either an absolue path or a
+file with respectively \[lq].conf\[rq] and \[lq].cmd\[rq] extensions in
+one of the following directories:
+.PD 0
+.P
+.PD
+\[lq]\[ti]/.trx\[rq], \[lq]\[ti]/.config/trx\[rq] or \[lq]/etc/trx/\[rq]
+.PD 0
+.P
+.PD
+Command-line ptions override settings in the config file.
+.PD 0
+.P
+.PD
 .SH OPTIONS
 .SS General
 .TP
@@ -29,7 +56,7 @@ Device configuration is setup by means of options flags
 read commands from file, line-by-line
 .TP
 \f[B]-o\f[R], \f[B]--output\f[R] \f[B]<filename>\f[R]
-write response to file instead of stdout
+write response to file instead of stdout TODO: not yet implemented
 .TP
 \f[B]-v\f[R], \f[B]--verbose\f[R]
 verbose output, returns info about serial port and general config
@@ -54,7 +81,7 @@ receiver will wait <\[en]timeout> msec for new input unless <\[en]count>
 has been reached
 .TP
 \f[B]-n\f[R], \f[B]--count\f[R] \f[B]<count>\f[R]
-max number of lines to be read
+max number of lines to be read per command
 .TP
 \f[B]-d\f[R], \f[B]--device\f[R] \f[B]<filename>\f[R]
 device config file, absolute path or the name of a unique file in

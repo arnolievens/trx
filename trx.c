@@ -219,7 +219,7 @@ char* find_file(const char* file, const char* ext)
 
     /* check if file is regular file */
     if (!S_ISREG(file_stat.st_mode)) {
-        fprintf(stderr, "file \"%s\" is not a regular file\n", path);
+        fprintf(stderr, "\"%s\" is not a regular file\n", path);
         return NULL;
 
     /* check if file is empty */
