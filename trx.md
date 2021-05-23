@@ -21,7 +21,7 @@ Device configuration is setup by means of options flags **(-pbnt)** or read from
 : read commands from file, line-by-line
 
 **-o**, **\--output** **\<filename\>**
-: write response to file instead of stdout
+: write response to file instead of stdout TODO: not yet implemented
 
 **-v**, **\--verbose**
 : verbose output, returns info about serial port and general config options
@@ -44,7 +44,7 @@ Device configuration is setup by means of options flags **(-pbnt)** or read from
 : receiver will wait <--timeout> msec for new input unless <--count> has been reached
 
 **-n**, **\--count** **\<count\>**
-: max number of lines to be read
+: max number of lines to be read per command
 
 **-d**, **\--device** **\<filename\>**
 : device config file, absolute path or the name of a unique file in $XDG\_CONFIG\_HONE $HOME/.trx or /etc/trx

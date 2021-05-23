@@ -440,7 +440,7 @@ int main(int argc, char **argv)
             char line[CMD_LEN+2];
 
             if (settings.verbose) printf("using input file \'%s\"\n",
-                    settings.input.name);
+                    settings.input.path);
 
             while (fgets(line, CMD_LEN+1, settings.input.stream)) {
 
