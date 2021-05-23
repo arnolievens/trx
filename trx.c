@@ -16,22 +16,40 @@
 
 #define CMD_LEN 80
 
+/**
+ * length of array
+ *
+ * @param[in] a array
+ * @return length
+ */
 #define LENGTH(a) sizeof(a)/sizeof(a[0])
 
 extern char **environ;
 extern int errno ;
 
+/**
+ * represent a file, it's absolute path while preserving th indicated name
+ */
+typedef struct file_t {
+    char* name; /**< either abs path or file with extension in eg ~/.trx/ */
+    char* path; /**< absolute path or relative to ./ */
+    FILE* file; /**< FILE pointer */
+} file_t;
+
+/**
+ * conatins all program settings set by arguments
+ */
 struct settings {
-    char *device;
-    char *input;
-    char *output;
-    int verbose;
-    int quiet;
-    int help;
+    file_t device; /**< device config file */
+    file_t input; /**< commands to be transmitted */
+    file_t output; /**< responses will be written to this file */
+    int verbose; /**< increase verbosity */
+    int quiet; /**< mute stdout */
 } settings;
 
-
-/* arg options */
+/**
+ * arg options
+ */
 struct option long_options[] = {
     {"device",    required_argument,  NULL,  'd'},
     {"input",     required_argument,  NULL,  'i'},
@@ -45,6 +63,53 @@ struct option long_options[] = {
     {"help",      no_argument,        NULL,  'h'},
     {NULL,        0,                  NULL,  0}
 };
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                            function prototypes                             //
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * print the help section to stdout
+ */
+static void print_help();
+
+/**
+ * print all settings
+ */
+static void print_settings();
+
+/**
+ * find file in various locations (~/.config/trx, ~/.trx, /etc/trx)
+ *
+ * @param[in,out] file name of file or absolute path
+ * @param[in] ext extension
+ * @return pointer to allocated string with absolute path or NULL if failed
+ */
+static char* find_file(const char* file, const char* ext);
+
+/**
+ * parse a device config file and set properties
+ *
+ * @param[out] portsettings writes settings in this struct
+ * @param[in] file reads from this file
+ * @return status 0 for succes, -1 for failure
+ */
+static int parse_config(portsettings_t* portsettings, FILE *file);
+
+/**
+ * controll transmit and receive
+ *
+ * @param[in] portsettings uses these settings for timeout and count
+ * @param[in] cmd command message string
+ * @return status 0 for succes, -1 for failure
+ */
+static int run(const portsettings_t* portsettings, const char* cmd);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                            function definition                             //
+////////////////////////////////////////////////////////////////////////////////
 
 void print_help()
 {
@@ -87,17 +152,64 @@ void print_help()
 
 void print_settings()
 {
-    if (settings.input)
-        printf("%-12s = %s\n", "input", settings.input);
-    if (settings.output)
-        printf("%-12s = %s\n", "output", settings.output);
-    if (settings.device)
-        printf("%-12s = %s\n", "device", settings.device);
+    if (settings.input.name)
+        printf("%-12s = %s\n", "input", settings.input.name);
+    if (settings.output.name)
+        printf("%-12s = %s\n", "output", settings.output.name);
+    if (settings.device.name)
+        printf("%-12s = %s\n", "device", settings.device.name);
     if (1) {
         printf("%-12s = %i\n", "verbose", settings.verbose);
         printf("%-12s = %i\n", "quiet", settings.quiet);
-        printf("%-12s = %i\n", "help", settings.help);
     }
+}
+
+char* find_file(const char* file, const char* ext)
+{
+    char* path;
+    char buf[CMD_LEN+1];
+
+    /* already absolute path */
+    if (access(file, R_OK) != -1) {
+        path = malloc(strlen(file)+1);
+        strcpy(path, file);
+        return path;
+    }
+
+    /* ~/.config/trx/{}.ext */
+    strcpy(buf, getenv("HOME"));
+    strcat(buf, "/.config/trx/");
+    strcat(buf, file);
+    strcat(buf, ext);
+    if (access(buf, R_OK) != -1) {
+        path = malloc(strlen(buf)+1);
+        strcpy(path, buf);
+        return path;
+    }
+
+    /* ~/.trx/{}.ext */
+    strcpy(buf, getenv("HOME"));
+    strcat(buf, "/.trx/");
+    strcat(buf, file);
+    strcat(buf, ext);
+    if (access(buf, R_OK) != -1) {
+        path = malloc(strlen(buf)+1);
+        strcpy(path, buf);
+        return path;
+    }
+
+    /* /etc/trx/{}.ext */
+    strcpy(buf, "/etc");
+    strcat(buf, "/trx/");
+    strcat(buf, file);
+    strcat(buf, ext);
+    if (access(buf, R_OK) != -1) {
+        path = malloc(strlen(buf)+1);
+        strcpy(path, buf);
+        return path;
+    }
+
+    return NULL;
 }
 
 int parse_config(portsettings_t* portsettings, FILE *file)
@@ -182,10 +294,13 @@ int run(const portsettings_t* portsettings, const char* cmd)
     return 0;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+//                                    main                                    //
+////////////////////////////////////////////////////////////////////////////////
+
 int main(int argc, char **argv)
 {
-    FILE *input_file = NULL;
-    FILE *output_file = NULL;
     portsettings_t portsettings = portsettings_default();
 
     /* parse options */
@@ -225,15 +340,15 @@ int main(int argc, char **argv)
 
             /* program settings */
             case 'd':
-                settings.device = optarg;
+                settings.device.name = optarg;
                 break;
 
             case 'i':
-                settings.input = optarg;
+                settings.input.name = optarg;
                 break;
 
             case 'o':
-                settings.output = optarg;
+                settings.output.name = optarg;
                 break;
 
             case 'v':
@@ -254,11 +369,29 @@ int main(int argc, char **argv)
         }
     }
 
+    /* validate device config file */
+    if (settings.device.name) {
+        settings.device.path = find_file(settings.device.name, ".conf");
+        if (!settings.device.path) {
+            fprintf(stderr, "%s \"%s\"\n", strerror(errno), settings.device.name);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    /* validate input file */
+    if (settings.input.name) {
+        settings.input.path = find_file(settings.input.name, ".cmd");
+        if (!settings.input.path) {
+            fprintf(stderr, "%s \"%s\"\n", strerror(errno), settings.input.name);
+            exit(EXIT_FAILURE);
+        }
+    }
+
     /* read config file (device) */
-    if (settings.device) {
+    if (settings.device.path) {
 
         FILE *device_file;
-        device_file = fopen(settings.device, "r");
+        device_file = fopen(settings.device.path, "r");
 
         if (device_file) {
             int e = parse_config(&portsettings, device_file);
@@ -266,7 +399,8 @@ int main(int argc, char **argv)
             if (e == -1) exit(EXIT_FAILURE);
 
         } else {
-            fprintf(stderr, "%s \"%s\"\n", strerror(errno), settings.device);
+            fprintf(stderr, "%s \"%s\"\n", strerror(errno),
+                    settings.device.path);
             exit(EXIT_FAILURE);
         }
     }
@@ -288,21 +422,23 @@ int main(int argc, char **argv)
         run(&portsettings, argv[i]);
     }
 
+
     /* run input file */
-    if (settings.input) {
-        input_file = fopen(settings.input, "r");
-        if (input_file) {
+    if (settings.input.name) {
+        settings.input.file = fopen(settings.input.path, "r");
+        if (settings.input.file) {
 
             char line[CMD_LEN+2];
 
-            if (settings.verbose) printf("using input file \'%s\"\n", settings.input);
+            if (settings.verbose) printf("using input file \'%s\"\n",
+                    settings.input.name);
 
-            while (fgets(line, CMD_LEN+1, input_file)) {
+            while (fgets(line, CMD_LEN+1, settings.input.file)) {
 
-                /* filter comments and empty lines */
+                /*filter comments and empty lines*/
                 if (*line == '#' || *line == '\n') continue;
 
-                /* validate max line length */
+                /*validate max line length*/
                 if (strlen(line) >= CMD_LEN) {
                     fprintf(stderr,
                             "maximum line length exceeded: %i characters\n",
@@ -310,17 +446,17 @@ int main(int argc, char **argv)
                     return -1;
                 }
 
-                /* trim trailing newlines */
+                /*trim trailing newlines*/
                 if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
 
                 if (settings.verbose) printf("%-12s = %s\n", "command", line);
                 run(&portsettings, line);
             }
 
-            fclose(input_file);
+            fclose(settings.input.file);
 
         } else {
-            fprintf(stderr, "%s \"%s\"\n", strerror(errno), settings.device);
+            fprintf(stderr, "%s \"%s\"\n", strerror(errno), settings.input.name);
             exit(EXIT_FAILURE);
         }
     }
@@ -328,7 +464,10 @@ int main(int argc, char **argv)
     /* die */
     serial_die();
     portsettings_die(&portsettings);
-    if (output_file) fclose(output_file);
+    if (settings.device.path) free(settings.device.path);
+    if (settings.input.path) free(settings.input.path);
+    if (settings.output.path) free(settings.output.path);
+    if (settings.output.file) fclose(settings.output.file);
     /* if (output_file) fclose(output_file); */
     exit(EXIT_SUCCESS);
 }

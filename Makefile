@@ -11,7 +11,7 @@ MANPREFIX = ${PREFIX}/share/man
 LIBS =
 INCL =
 CC = gcc
-CFLAGS = -Wall -std=gnu99 -pedantic
+CFLAGS = -Wall -std=gnu99 -pedantic -g
 
 .PHONY: default all clean
 
@@ -40,7 +40,7 @@ man:
 	sed -i "s/VERSION/${VERSION}/g" $(TARGET).1
 
 
-install: all man
+install: all
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f $(TARGET) ${DESTDIR}${PREFIX}/bin
 	chmod 755 ${DESTDIR}${PREFIX}/bin/$(TARGET)
