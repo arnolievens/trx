@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include "portsettings.h"
 #include "serial.h"
@@ -33,7 +34,7 @@ extern int errno ;
 typedef struct file_t {
     char* name; /**< either abs path or file with extension in eg ~/.trx/ */
     char* path; /**< absolute path or relative to ./ */
-    FILE* file; /**< FILE pointer */
+    FILE* stream; /**< FILE pointer */
 } file_t;
 
 /**
@@ -95,7 +96,7 @@ static char* find_file(const char* file, const char* ext);
  * @param[in] file reads from this file
  * @return status 0 for succes, -1 for failure
  */
-static int parse_config(portsettings_t* portsettings, FILE *file);
+static int parse_config(portsettings_t* portsettings, file_t *file);
 
 /**
  * controll transmit and receive
@@ -212,18 +213,25 @@ char* find_file(const char* file, const char* ext)
     return NULL;
 }
 
-int parse_config(portsettings_t* portsettings, FILE *file)
+int parse_config(portsettings_t* portsettings, file_t *file)
 {
     char line[CMD_LEN+2];
 
-    while (fgets(line, CMD_LEN+1, file)) {
+    file->stream = fopen(file->path, "r");
+
+    if (!file->stream) {
+        fprintf(stderr, "%s \"%s\"\n", strerror(errno), settings.device.path);
+        return -1;
+    }
+
+    while (fgets(line, CMD_LEN+1, file->stream)) {
 
         /* validate max line length */
         if (strlen(line) >= CMD_LEN) {
             fprintf(stderr,
                     "maximum line length exceeded: %i characters\n",
                     CMD_LEN);
-            return -1;
+            goto fail;
         }
 
         /* skip comments */
@@ -237,22 +245,23 @@ int parse_config(portsettings_t* portsettings, FILE *file)
             p = strtok(NULL, "= \r\n");
             if (portsettings_set_port(portsettings, p) == -1) {
                 fprintf(stderr, "invalid serial port: %s\n", p);
-                exit(EXIT_FAILURE);
+                goto fail;
             }
 
         } else if (!portsettings->baudrate && (strcmp(p, "baudrate") == 0)) {
             p = strtok(NULL, "= \r\n");
             if (portsettings_set_baudrate(portsettings, p) == -1) {
                 fprintf(stderr, "invalid baudrate: %s\n", p);
-                return -1;
+                goto fail;
             }
 
         } else if (!portsettings->timeout && (strcmp(p, "timeout") == 0)) {
             p = strtok(NULL, "= \r\n");
             if (portsettings_set_timeout(portsettings, p) == -1) {
                 fprintf(stderr, "invalid timeout: %s\n", p);
-                return -1;
+                goto fail;
             }
+
         } else if (!portsettings->count && (strcmp(p, "count") == 0)) {
             p = strtok(NULL, "= \r\n");
             if (p) {
@@ -261,12 +270,18 @@ int parse_config(portsettings_t* portsettings, FILE *file)
                     fprintf(stderr,
                             "invalid \"count\" value: %i\n",
                             portsettings->count);
-                    return -1;
+                    goto fail;
                 }
             }
         }
     }
+
+    fclose(file->stream);
     return 0;
+fail:
+    fclose(file->stream);
+    fprintf(stderr, "error parsing config file: %s\n", file->name);
+    return -1;
 }
 
 int run(const portsettings_t* portsettings, const char* cmd)
@@ -276,7 +291,7 @@ int run(const portsettings_t* portsettings, const char* cmd)
     char buf[81];
     unsigned int n = 0;
 
-    while (n < portsettings->count) {
+    while (portsettings->count == UINT_MAX || n++ < portsettings->count) {
         if (serial_rx(portsettings, buf, 80) != -1) {
             if (!settings.quiet) {
                 if (settings.verbose) printf("%-12s = ", "response");
@@ -287,7 +302,6 @@ int run(const portsettings_t* portsettings, const char* cmd)
                     break;
                 }
             }
-            n++;
         }
         else break;
     }
@@ -306,7 +320,8 @@ int main(int argc, char **argv)
     /* parse options */
     int oc;
     int oi = 0;
-    while ((oc = getopt_long(argc, argv, "d:i:o:b:p:t:n:vqh", long_options, &oi)) != -1) {
+    while ((oc = getopt_long(argc, argv, "d:i:o:b:p:t:n:vqh",
+                    long_options, &oi)) != -1) {
         switch (oc) {
 
             /* port settings */
@@ -335,8 +350,12 @@ int main(int argc, char **argv)
                 }
 
             case 'n':
-                portsettings.count = atoi(optarg);
-                break;
+                if (portsettings_set_count(&portsettings, optarg) != -1) {
+                    break;
+                } else {
+                    fprintf(stderr, "invalid count: %s\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
 
             /* program settings */
             case 'd':
@@ -373,7 +392,8 @@ int main(int argc, char **argv)
     if (settings.device.name) {
         settings.device.path = find_file(settings.device.name, ".conf");
         if (!settings.device.path) {
-            fprintf(stderr, "%s \"%s\"\n", strerror(errno), settings.device.name);
+            fprintf(stderr, "%s \"%s\"\n", strerror(errno),
+                    settings.device.name);
             exit(EXIT_FAILURE);
         }
     }
@@ -382,27 +402,16 @@ int main(int argc, char **argv)
     if (settings.input.name) {
         settings.input.path = find_file(settings.input.name, ".cmd");
         if (!settings.input.path) {
-            fprintf(stderr, "%s \"%s\"\n", strerror(errno), settings.input.name);
+            fprintf(stderr, "%s \"%s\"\n", strerror(errno),
+                    settings.input.name);
             exit(EXIT_FAILURE);
         }
     }
 
     /* read config file (device) */
     if (settings.device.path) {
-
-        FILE *device_file;
-        device_file = fopen(settings.device.path, "r");
-
-        if (device_file) {
-            int e = parse_config(&portsettings, device_file);
-            fclose(device_file);
-            if (e == -1) exit(EXIT_FAILURE);
-
-        } else {
-            fprintf(stderr, "%s \"%s\"\n", strerror(errno),
-                    settings.device.path);
-            exit(EXIT_FAILURE);
-        }
+        if (parse_config(&portsettings, &settings.device)!= -1);
+        else exit(EXIT_FAILURE);
     }
 
     /* verbose print */
@@ -425,15 +434,15 @@ int main(int argc, char **argv)
 
     /* run input file */
     if (settings.input.name) {
-        settings.input.file = fopen(settings.input.path, "r");
-        if (settings.input.file) {
+        settings.input.stream = fopen(settings.input.path, "r");
+        if (settings.input.stream) {
 
             char line[CMD_LEN+2];
 
             if (settings.verbose) printf("using input file \'%s\"\n",
                     settings.input.name);
 
-            while (fgets(line, CMD_LEN+1, settings.input.file)) {
+            while (fgets(line, CMD_LEN+1, settings.input.stream)) {
 
                 /*filter comments and empty lines*/
                 if (*line == '#' || *line == '\n') continue;
@@ -453,10 +462,11 @@ int main(int argc, char **argv)
                 run(&portsettings, line);
             }
 
-            fclose(settings.input.file);
+            fclose(settings.input.stream);
 
         } else {
-            fprintf(stderr, "%s \"%s\"\n", strerror(errno), settings.input.name);
+            fprintf(stderr, "%s \"%s\"\n",
+                    strerror(errno), settings.input.name);
             exit(EXIT_FAILURE);
         }
     }
@@ -467,7 +477,7 @@ int main(int argc, char **argv)
     if (settings.device.path) free(settings.device.path);
     if (settings.input.path) free(settings.input.path);
     if (settings.output.path) free(settings.output.path);
-    if (settings.output.file) fclose(settings.output.file);
+    if (settings.output.stream) fclose(settings.output.stream);
     /* if (output_file) fclose(output_file); */
     exit(EXIT_SUCCESS);
 }

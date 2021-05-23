@@ -17,7 +17,7 @@ portsettings_t portsettings_default(void)
         .baudrate = 0,
         .count = -1,
         .port = NULL,
-        .timeout = 1,
+        .timeout = 0,
     };
     return portsettings;
 }
@@ -53,8 +53,16 @@ int portsettings_set_port(portsettings_t* portsettings, const char* str)
 int portsettings_set_timeout(portsettings_t* portsettings, const char* str)
 {
     double d = atof(str);
-    if (d < 0) return -1;
+    if (d <= 0) return -1;
     portsettings->timeout = d;
+    return 0;
+}
+
+int portsettings_set_count(portsettings_t* portsettings, const char* str)
+{
+    int i = atoi(str);
+    if (i <= 0 && i != -1) return -1;
+    portsettings->count = i;
     return 0;
 }
 

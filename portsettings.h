@@ -56,10 +56,19 @@ extern int portsettings_set_port(portsettings_t* portsettings, const char* port)
  * set timeout
  *
  * @param[out] portsettings object in which timeout will be updated
- * @param[in] timeout string containing a positive double value or 0
+ * @param[in] timeout string containing a positive double value, (not 0)
  * @return status 0 for succes, -1 for failure
  */
 extern int portsettings_set_timeout(portsettings_t* portsettings, const char* timeout);
+
+/**
+ * set count
+ *
+ * @param[out] portsettings object in which count will be updated
+ * @param[in] count string containing a positive int value or -1 (not 0)
+ * @return status 0 for succes, -1 for failure
+ */
+extern int portsettings_set_count(portsettings_t* portsettings, const char* str);
 
 /**
  * free allocated memory
