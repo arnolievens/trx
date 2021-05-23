@@ -6,11 +6,12 @@
 
 #include <errno.h>
 #include <getopt.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
-#include <limits.h>
 
 #include "portsettings.h"
 #include "serial.h"
@@ -167,50 +168,68 @@ void print_settings()
 
 char* find_file(const char* file, const char* ext)
 {
-    char* path;
+    char* path = NULL;
     char buf[CMD_LEN+1];
+    struct stat file_stat;
 
-    /* already absolute path */
-    if (access(file, F_OK) != -1) {
-        path = malloc(strlen(file)+1);
-        strcpy(path, file);
-        return path;
+    if (*file != '~') {
+        strcpy(buf, file);
+
+    /* expand tilde */
+    } else {
+        strcpy(buf, getenv("HOME"));
+        strcat(buf, "/");
+        strcat(buf, file+1);
     }
 
-    /* ~/.config/trx/{}.ext */
-    strcpy(buf, getenv("HOME"));
-    strcat(buf, "/.config/trx/");
-    strcat(buf, file);
-    strcat(buf, ext);
-    if (access(buf, F_OK) != -1) {
-        path = malloc(strlen(buf)+1);
-        strcpy(path, buf);
-        return path;
+    /* absolute path */
+    if (access(buf, F_OK) == -1) {
+
+        /* ~/.config/trx/{}.ext */
+        strcpy(buf, getenv("HOME"));
+        strcat(buf, "/.config/trx/");
+        strcat(buf, file);
+        strcat(buf, ext);
+        if (access(buf, F_OK) == -1) {
+
+            /* ~/.trx/{}.ext */
+            strcpy(buf, getenv("HOME"));
+            strcat(buf, "/.trx/");
+            strcat(buf, file);
+            strcat(buf, ext);
+            if (access(buf, F_OK) == -1) {
+
+                /* /etc/trx/{}.ext */
+                strcpy(buf, "/etc");
+                strcat(buf, "/trx/");
+                strcat(buf, file);
+                strcat(buf, ext);
+
+                if (access(buf, F_OK) == -1) {
+                    return NULL;
+                }
+            }
+        }
     }
 
-    /* ~/.trx/{}.ext */
-    strcpy(buf, getenv("HOME"));
-    strcat(buf, "/.trx/");
-    strcat(buf, file);
-    strcat(buf, ext);
-    if (access(buf, F_OK) != -1) {
-        path = malloc(strlen(buf)+1);
-        strcpy(path, buf);
+    path = malloc(strlen(buf)+1);
+    strcpy(path, buf);
+
+    stat(path, &file_stat);
+
+    /* check if file is regular file */
+    if (!S_ISREG(file_stat.st_mode)) {
+        fprintf(stderr, "file \"%s\" is not a regular file\n", path);
+        return NULL;
+
+    /* check if file is empty */
+    } else if (!file_stat.st_size) {
+        fprintf(stderr, "file \"%s\" is empty\n", path);
+        return NULL;
+
+    } else {
         return path;
     }
-
-    /* /etc/trx/{}.ext */
-    strcpy(buf, "/etc");
-    strcat(buf, "/trx/");
-    strcat(buf, file);
-    strcat(buf, ext);
-    if (access(buf, F_OK) != -1) {
-        path = malloc(strlen(buf)+1);
-        strcpy(path, buf);
-        return path;
-    }
-
-    return NULL;
 }
 
 int parse_config(portsettings_t* portsettings, file_t *file)
