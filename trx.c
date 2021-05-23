@@ -262,7 +262,7 @@ int parse_config(portsettings_t* portsettings, file_t *file)
                 goto fail;
             }
 
-        } else if (!portsettings->count && (strcmp(p, "count") == 0)) {
+        } else if (portsettings->count == UINT_MAX && (strcmp(p, "count") == 0)) {
             p = strtok(NULL, "= \r\n");
             if (portsettings_set_count(portsettings, p) == -1) {
                 fprintf(stderr, "invalid count: %s\n", p);
