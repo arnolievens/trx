@@ -11,44 +11,22 @@ trx command-line serial transmit-receive utility
 .SH DESCRIPTION
 .PP
 Trx is a command-line utiliy that allows to simultaneously transmit and
-receive data to a serial device
-.PD 0
-.P
-.PD
-You can specify the number of expected lines \f[B](-n)\f[R] or use the
-timeout \f[B](-t)\f[R] to detect the end of transmission
-.PD 0
-.P
-.PD
-Device configuration is setup by means of options flags
+receive data to a serial device You can specify the number of expected
+lines \f[B](-n)\f[R] or use the timeout \f[B](-t)\f[R] to detect the end
+of transmission. Device configuration is setup by means of options flags
 \f[B](-pbnt)\f[R] or read from a device config file \f[B](-d)\f[R]
-.PD 0
-.P
-.PD
 Multiple commands can be given in the command arguments or
-alternatively, a file can be specified (\f[B]-i\f[R])
+alternatively, a file can be specified (\f[B]-i\f[R]) When an input file
+is provided as wel as one or more argument commands, the latter will be
+sent prior to reading the input file The device config or command file
+may be either an absolue path or a file with respectively
+\[lq].conf\[rq] and \[lq].cmd\[rq] extensions in one of the following
+directories: \[lq]\[ti]/.trx\[rq], \[lq]\[ti]/.config/trx\[rq] or
+\[lq]/etc/trx/\[rq]
 .PD 0
 .P
 .PD
-When an input file is provided as wel as one or more argument commands,
-the latter will be sent prior to reading the input file
-.PD 0
-.P
-.PD
-The device config or command file may be either an absolue path or a
-file with respectively \[lq].conf\[rq] and \[lq].cmd\[rq] extensions in
-one of the following directories:
-.PD 0
-.P
-.PD
-\[lq]\[ti]/.trx\[rq], \[lq]\[ti]/.config/trx\[rq] or \[lq]/etc/trx/\[rq]
-.PD 0
-.P
-.PD
-Command-line ptions override settings in the config file.
-.PD 0
-.P
-.PD
+Command-line options override settings in the config file.
 .SH OPTIONS
 .SS General
 .TP
@@ -85,7 +63,7 @@ max number of lines to be read per command
 .TP
 \f[B]-d\f[R], \f[B]--device\f[R] \f[B]<filename>\f[R]
 device config file, absolute path or the name of a unique file in
-$XDG_CONFIG_HONE $HOME/.trx or /etc/trx
+$XDG_CONFIG_HOME $HOME/.trx or /etc/trx
 .SH EXAMPLES
 .TP
 \f[B]trx -d someDevice \[en]timeout 0.2 -n 1 \[dq]some command\[dq]\[dq]\f[R]
@@ -102,7 +80,7 @@ use \[dq]dev.conf\[dq] device config file and send two commands
 .SH EXIT VALUES
 .TP
 \f[B]0\f[R]
-Succes, data was succesfully transmitted - even if receive timed-out
+Succes, data was successfully transmitted - even if receive timed-out
 .TP
 \f[B]1\f[R]
 Fail, invalid options, connection was not established or aborted
@@ -113,11 +91,8 @@ plenty
 .PP
 Copyright \[co] 2021 Arno Lievens.
 License GPLv3+: GNU GPL version 3 or later
-<https://gnu.org/licenses/gpl.html>.
-.PD 0
-.P
-.PD
-This is free software: you are free to change and redistribute it.
+<https://gnu.org/licenses/gpl.html>. This is free software: you are free
+to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 .SH AUTHORS
 Arno Lievens.

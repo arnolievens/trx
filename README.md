@@ -17,4 +17,4 @@ Device configuration is setup by means of options flags (-pbnt) or read from a d
 ```sh
 make clean install
 ```
-note: user should be in dailout group
+note: user should be in dial-out group

@@ -5,12 +5,12 @@ trx command-line serial transmit-receive utility
 **trx** \[options\] \[file|baudrate|timeout|count\] \[cmd1\] ...
 
 # DESCRIPTION
-Trx is a command-line utiliy that allows to simultaneously transmit and receive data to a serial device\
-You can specify the number of expected lines **(-n)** or use the timeout **(-t)** to detect the end of transmission\
-Device configuration is setup by means of options flags **(-pbnt)** or read from a device config file **(-d)**\
-Multiple commands can be given in the command arguments or alternatively, a file can be specified (**-i**)\
-When an input file is provided as wel as one or more argument commands, the latter will be sent prior to reading the input file\
-The device config or command file may be either an absolue path or a file with respectively ".conf" and ".cmd" extensions in one of the following directories:\
+Trx is a command-line utiliy that allows to simultaneously transmit and receive data to a serial device<br>
+You can specify the number of expected lines **(-n)** or use the timeout **(-t)** to detect the end of transmission.<br>
+Device configuration is setup by means of options flags **(-pbnt)** or read from a device config file **(-d)**<br>
+Multiple commands can be given in the command arguments or alternatively, a file can be specified (**-i**)<br>
+When an input file is provided as wel as one or more argument commands, the latter will be sent prior to reading the input file<br>
+The device config or command file may be either an absolue path or a file with respectively ".conf" and ".cmd" extensions in one of the following directories:<br>
 "\~/.trx", "\~/.config/trx" or "/etc/trx/"\
 Command-line options override settings in the config file.
 
@@ -62,7 +62,7 @@ Command-line options override settings in the config file.
 
 # EXIT VALUES
 **0**
-: Succes, data was succesfully transmitted - even if receive timed-out
+: Succes, data was successfully transmitted - even if receive timed-out
 
 **1**
 : Fail, invalid options, connection was not established or aborted
@@ -71,6 +71,6 @@ Command-line options override settings in the config file.
 plenty
 
 # COPYRIGHT
-Copyright © 2021 Arno Lievens. License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\
+Copyright © 2021 Arno Lievens. License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.<br>
 This is free software: you are free to change and redistribute it.  There  is  NO
 WARRANTY, to the extent permitted by law.
