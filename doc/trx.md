@@ -12,7 +12,7 @@ Multiple commands can be given in the command arguments or alternatively, a file
 When an input file is provided as wel as one or more argument commands, the latter will be sent prior to reading the input file\
 The device config or command file may be either an absolue path or a file with respectively ".conf" and ".cmd" extensions in one of the following directories:\
 "\~/.trx", "\~/.config/trx" or "/etc/trx/"\
-Command-line ptions override settings in the config file.\
+Command-line options override settings in the config file.
 
 # OPTIONS
 
@@ -48,7 +48,7 @@ Command-line ptions override settings in the config file.\
 : max number of lines to be read per command
 
 **-d**, **\--device** **\<filename\>**
-: device config file, absolute path or the name of a unique file in $XDG\_CONFIG\_HONE $HOME/.trx or /etc/trx
+: device config file, absolute path or the name of a unique file in $XDG\_CONFIG\_HOME $HOME/.trx or /etc/trx
 
 # EXAMPLES
 **trx -d someDevice --timeout 0.2 -n 1 \"some command"\"**

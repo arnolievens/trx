@@ -185,8 +185,8 @@ char* find_file(const char* file, const char* ext)
     if (access(buf, F_OK) == -1) {
 
         /* ~/.config/trx/{}.ext */
-        strcpy(buf, getenv("HOME"));
-        strcat(buf, "/.config/trx/");
+        strcpy(buf, getenv("XDG_CONFIG_HOME"));
+        strcat(buf, "/trx/");
         strcat(buf, file);
         strcat(buf, ext);
         if (access(buf, F_OK) == -1) {
