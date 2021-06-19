@@ -1,7 +1,3 @@
-% TRX(1) trx VERSION
-% Arno Lievens
-% May 2021
-
 # NAME
 trx command-line serial transmit-receive utility
 

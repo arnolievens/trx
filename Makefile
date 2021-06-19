@@ -6,6 +6,8 @@
 
 TARGET = trx
 VERSION = 1.0
+AUTHOR = Arno Lievens
+DATE = May 2021
 PREFIX = /usr/local
 MANPREFIX = ${PREFIX}/share/man
 LIBS =
@@ -25,13 +27,11 @@ OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
 HEADERS = $(wildcard *.h)
 
 %.o: %.c $(HEADERS)
-	# $(CC) $(CFLAGS) -I$(INCL) -c $< -o $@
 	$(CC) $(CFLAGS) -c $< -o $@
 
 .PRECIOUS: $(TARGET) $(OBJECTS)
 
 $(TARGET): $(OBJECTS)
-	# $(CC) $(CFLAGS) $(OBJECTS) -I$(INCL) $(LIBS) -o $@
 	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -o $@
 
 clean:
@@ -39,8 +39,12 @@ clean:
 	-rm -f $(TARGET)
 
 man:
-	pandoc $(TARGET).md -s -t man -o $(TARGET).1
-	sed -i "s/VERSION/${VERSION}/g" $(TARGET).1
+	printf "%s\n%s\n%s\n\n" \
+		"% $(shell echo $(TARGET) | tr a-z A-Z)(1) $(TARGET) $(VERSION)" \
+		"% $(AUTHOR)" \
+		"% $(DATE)" > $(TARGET).tmp
+	pandoc $(TARGET).tmp $(TARGET).md -s -t man -o $(TARGET).1
+	rm -f $(TARGET).tmp
 
 
 install: all
