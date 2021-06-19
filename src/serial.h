@@ -45,8 +45,11 @@ extern int serial_rx(const portsettings_t* portsettings, char *buffer, size_t le
 
 /*
  * free used resources
+ * reset serial port settings
+ *
+ * @return status 0 for succes, -1 for failure
  */
-extern void serial_die(void);
+extern int serial_die(void);
 
 #endif
 

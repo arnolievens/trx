@@ -18,6 +18,7 @@
 #include "serial.h"
 
 int fd;
+struct termios oldtty;
 
 int serial_init(const portsettings_t* portsettings)
 {
@@ -48,6 +49,8 @@ int serial_init(const portsettings_t* portsettings)
         fprintf(stderr, "error reading port settings: %s\n", strerror(errno));
         return -1;
     }
+
+    oldtty = tty;
 
     /* set IO speed */
     cfsetospeed(&tty, portsettings->baudrate);
@@ -94,13 +97,12 @@ int serial_init(const portsettings_t* portsettings)
     tty.c_cc[VMIN] =                0;
 #pragma GCC diagnostic pop
 
-    // write settings to port
     if (tcsetattr(fd, TCSANOW, &tty) == -1) {
         fprintf(stderr, "error setting serial port settings: %s\n",
                 strerror(errno));
         return -1;
     }
-    return 1;
+    return 0;
 }
 
 /* TODO "fd" should go in portsettings struct */
@@ -173,6 +175,14 @@ int serial_rx(const portsettings_t* portsettings, char *buf, size_t size)
     return -1;
 }
 
-void serial_die(void) {
+int serial_die(void) {
+
+    if (tcsetattr(fd, TCSANOW, &oldtty) == -1) {
+        fprintf(stderr, "error resetting serial port settings: %s\n",
+                strerror(errno));
+        return -1;
+    }
+
     if (fd) close(fd);
+    return 0;
 }

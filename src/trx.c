@@ -382,7 +382,7 @@ int main(int argc, char **argv)
             case 'o':
                 fprintf(stderr, "--output option not yet implemented ...\n");
                 exit(EXIT_FAILURE);
-                settings.output.name = optarg;
+                /* settings.output.name = optarg; */
                 break;
 
             case 'v':
