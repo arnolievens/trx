@@ -11,7 +11,10 @@ MANPREFIX = ${PREFIX}/share/man
 LIBS =
 INCL =
 CC = gcc
-CFLAGS = -Wall -std=gnu99 -pedantic -g
+CFLAGS = -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow -Wpointer-arith \
+		 -Wcast-align -Wstrict-prototypes -Wstrict-overflow=5 -Wwrite-strings \
+		 -Wcast-qual -Wswitch-default -Wswitch-enum -Wconversion \
+		 -Wunreachable-code
 
 .PHONY: default all clean
 

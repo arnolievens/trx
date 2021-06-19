@@ -27,10 +27,9 @@
 #define LENGTH(a) sizeof(a)/sizeof(a[0])
 
 extern char **environ;
-extern int errno ;
 
 /**
- * represent a file, it's absolute path while preserving th indicated name
+ * represent a file, it's absolute path while preserving the indicated name
  */
 typedef struct file_t {
     char* name; /**< either abs path or file with extension in eg ~/.trx/ */
@@ -74,12 +73,12 @@ struct option long_options[] = {
 /**
  * print the help section to stdout
  */
-static void print_help();
+static void print_help(void);
 
 /**
  * print all settings
  */
-static void print_settings();
+static void print_settings(void);
 
 /**
  * find file in various locations (~/.config/trx, ~/.trx, /etc/trx)
@@ -381,6 +380,8 @@ int main(int argc, char **argv)
                 break;
 
             case 'o':
+                fprintf(stderr, "--output option not yet implemented ...\n");
+                exit(EXIT_FAILURE);
                 settings.output.name = optarg;
                 break;
 
@@ -440,7 +441,7 @@ int main(int argc, char **argv)
     }
 
     /* run arg commands */
-    for (size_t i = optind; i < argc; i++) {
+    for (int i = optind; i < argc; i++) {
         if (settings.verbose) printf("%-12s = %s\n", "command", argv[i]);
         run(&portsettings, argv[i]);
     }
