@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "portsettings.h"
 #include "serial.h"
@@ -26,7 +27,13 @@
  */
 #define LENGTH(a) sizeof(a)/sizeof(a[0])
 
+#define UNUSED(x) (void)(x)
+
 extern char **environ;
+
+portsettings_t portsettings;
+
+volatile sig_atomic_t killed = 0;
 
 /**
  * represent a file, it's absolute path while preserving the indicated name
@@ -96,7 +103,7 @@ static char* find_file(const char* file, const char* ext);
  * @param[in] file reads from this file
  * @return status 0 for succes, -1 for failure
  */
-static int parse_config(portsettings_t* portsettings, file_t *file);
+static int parse_config(file_t *file);
 
 /**
  * controll transmit and receive
@@ -105,8 +112,9 @@ static int parse_config(portsettings_t* portsettings, file_t *file);
  * @param[in] cmd command message string
  * @return status 0 for succes, -1 for failure
  */
-static int run(const portsettings_t* portsettings, const char* cmd);
+static int run(const char* cmd);
 
+static void die(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 //                            function definition                             //
@@ -231,7 +239,7 @@ char* find_file(const char* file, const char* ext)
     }
 }
 
-int parse_config(portsettings_t* portsettings, file_t *file)
+int parse_config(file_t *file)
 {
     char line[CMD_LEN+2];
 
@@ -259,30 +267,30 @@ int parse_config(portsettings_t* portsettings, file_t *file)
 
         p = strtok(line, "= \r\n");
 
-        if (!portsettings->port && (strcmp(p, "port") == 0)) {
+        if (!portsettings.port && (strcmp(p, "port") == 0)) {
             p = strtok(NULL, "= \r\n");
-            if (portsettings_set_port(portsettings, p) == -1) {
+            if (portsettings_set_port(&portsettings, p) == -1) {
                 fprintf(stderr, "invalid serial port: %s\n", p);
                 goto fail;
             }
 
-        } else if (!portsettings->baudrate && (strcmp(p, "baudrate") == 0)) {
+        } else if (!portsettings.baudrate && (strcmp(p, "baudrate") == 0)) {
             p = strtok(NULL, "= \r\n");
-            if (portsettings_set_baudrate(portsettings, p) == -1) {
+            if (portsettings_set_baudrate(&portsettings, p) == -1) {
                 fprintf(stderr, "invalid baudrate: %s\n", p);
                 goto fail;
             }
 
-        } else if (!portsettings->timeout && (strcmp(p, "timeout") == 0)) {
+        } else if (!portsettings.timeout && (strcmp(p, "timeout") == 0)) {
             p = strtok(NULL, "= \r\n");
-            if (portsettings_set_timeout(portsettings, p) == -1) {
+            if (portsettings_set_timeout(&portsettings, p) == -1) {
                 fprintf(stderr, "invalid timeout: %s\n", p);
                 goto fail;
             }
 
-        } else if (portsettings->count == UINT_MAX && (strcmp(p, "count") == 0)) {
+        } else if (portsettings.count == UINT_MAX && (strcmp(p, "count") == 0)) {
             p = strtok(NULL, "= \r\n");
-            if (portsettings_set_count(portsettings, p) == -1) {
+            if (portsettings_set_count(&portsettings, p) == -1) {
                 fprintf(stderr, "invalid count: %s\n", p);
                 goto fail;
             }
@@ -297,15 +305,18 @@ fail:
     return -1;
 }
 
-int run(const portsettings_t* portsettings, const char* cmd)
+int run(const char* cmd)
 {
-    serial_tx(portsettings, cmd);
+    serial_tx(&portsettings, cmd);
 
     char buf[81];
     unsigned int n = 0;
 
-    while (portsettings->count == UINT_MAX || n++ < portsettings->count) {
-        if (serial_rx(portsettings, buf, 80) != -1) {
+    while (portsettings.count == UINT_MAX || n++ < portsettings.count) {
+
+        if (killed) die();
+
+        if (serial_rx(&portsettings, buf, 80) != -1) {
             if (!settings.quiet) {
                 if (settings.verbose) printf("%-12s = ", "response");
                 if (*buf) {
@@ -321,6 +332,25 @@ int run(const portsettings_t* portsettings, const char* cmd)
     return 0;
 }
 
+void term(int signum)
+{
+    UNUSED(signum);
+    killed = 1;
+}
+
+
+void die(void)
+{
+    serial_die();
+    portsettings_die(&portsettings);
+    if (settings.device.path) free(settings.device.path);
+    if (settings.input.path) free(settings.input.path);
+    if (settings.output.path) free(settings.output.path);
+    if (settings.output.stream) fclose(settings.output.stream);
+    /* if (output_file) fclose(output_file); */
+    exit(EXIT_SUCCESS);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                    main                                    //
@@ -328,7 +358,10 @@ int run(const portsettings_t* portsettings, const char* cmd)
 
 int main(int argc, char **argv)
 {
-    portsettings_t portsettings = portsettings_default();
+    struct sigaction action;
+
+
+    portsettings = portsettings_default();
 
     /* parse options */
     int oc;
@@ -425,7 +458,7 @@ int main(int argc, char **argv)
 
     /* read config file (device) */
     if (settings.device.path) {
-        if (parse_config(&portsettings, &settings.device)!= -1);
+        if (parse_config(&settings.device)!= -1);
         else exit(EXIT_FAILURE);
     }
 
@@ -435,6 +468,11 @@ int main(int argc, char **argv)
         portsettings_print(&portsettings);
     }
 
+    /* catch sig */
+    memset(&action, 0, sizeof(struct sigaction));
+    action.sa_handler = term;
+    sigaction(SIGINT, &action, NULL);
+
     /* init serial port */
     if (serial_init(&portsettings) == -1) {
         exit(EXIT_FAILURE);
@@ -442,8 +480,9 @@ int main(int argc, char **argv)
 
     /* run arg commands */
     for (int i = optind; i < argc; i++) {
+        if (killed) die();
         if (settings.verbose) printf("%-12s = %s\n", "command", argv[i]);
-        run(&portsettings, argv[i]);
+        run(argv[i]);
     }
 
 
@@ -458,6 +497,8 @@ int main(int argc, char **argv)
                     settings.input.path);
 
             while (fgets(line, CMD_LEN+1, settings.input.stream)) {
+
+                if (killed) die();
 
                 /*filter comments and empty lines*/
                 if (*line == '#' || *line == '\n') continue;
@@ -474,7 +515,7 @@ int main(int argc, char **argv)
                 if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
 
                 if (settings.verbose) printf("%-12s = %s\n", "command", line);
-                run(&portsettings, line);
+                run(line);
             }
 
             fclose(settings.input.stream);
@@ -485,14 +526,6 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
     }
-
-    /* die */
-    serial_die();
-    portsettings_die(&portsettings);
-    if (settings.device.path) free(settings.device.path);
-    if (settings.input.path) free(settings.input.path);
-    if (settings.output.path) free(settings.output.path);
-    if (settings.output.stream) fclose(settings.output.stream);
-    /* if (output_file) fclose(output_file); */
-    exit(EXIT_SUCCESS);
+    die();
 }
+

@@ -17,6 +17,8 @@
 
 #include "serial.h"
 
+#define UNUSED(x) (void)(x)
+
 int fd;
 struct termios oldtty;
 
@@ -105,12 +107,10 @@ int serial_init(const portsettings_t* portsettings)
     return 0;
 }
 
-/* TODO "fd" should go in portsettings struct */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 int serial_tx(const portsettings_t* portsettings, const char *cmd)
 {
-#pragma GCC diagnostic pop
+    /* TODO "fd" should go in portsettings struct */
+    UNUSED(portsettings);
     int len = (int)strlen(cmd);
     int n = (int)write(fd, cmd, (size_t)len);
     write(fd, "\r", 1);
