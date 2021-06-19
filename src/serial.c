@@ -53,6 +53,10 @@ int serial_init(const portsettings_t* portsettings)
     cfsetospeed(&tty, portsettings->baudrate);
     cfsetispeed(&tty, portsettings->baudrate);
 
+    /* ignore Wsign because termios.c_cflag is unsigned but the macros are */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
     /* set port paratmeters */
     tty.c_cflag |=                  CLOCAL | CREAD;
     /* ?? */
@@ -88,6 +92,7 @@ int serial_init(const portsettings_t* portsettings)
     /* non-blocking behaviour */
     tty.c_cc[VTIME] =               0;
     tty.c_cc[VMIN] =                0;
+#pragma GCC diagnostic pop
 
     // write settings to port
     if (tcsetattr(fd, TCSANOW, &tty) == -1) {
@@ -98,14 +103,22 @@ int serial_init(const portsettings_t* portsettings)
     return 1;
 }
 
-int serial_tx(const portsettings_t* portsettings, const char *cmd) {
-    int len = strlen(cmd);
-    ssize_t n = write(fd, cmd, len);
+/* TODO "fd" should go in portsettings struct */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+int serial_tx(const portsettings_t* portsettings, const char *cmd)
+{
+#pragma GCC diagnostic pop
+    int len = (int)strlen(cmd);
+    int n = (int)write(fd, cmd, (size_t)len);
     write(fd, "\r", 1);
+
     if (n != len) {
-        fprintf(stderr, "sent only %li bytes out of %i\n", n, len);
+        fprintf(stderr, "sent only %i bytes out of %i\n", n, len);
     }
-    tcdrain(fd); /* wait until output buffer is empty */
+
+    /* wait until output buffer is empty */
+    tcdrain(fd);
     return n;
 }
 
@@ -120,7 +133,7 @@ int serial_rx(const portsettings_t* portsettings, char *buf, size_t size)
 
     struct timeval timeout = {
         .tv_sec = 0,
-        .tv_usec = 1000000.0 * portsettings->timeout,
+        .tv_usec = (long)(1000000.0 * portsettings->timeout),
     };
 
     switch (select(fd+1, &set, NULL, NULL, &timeout)) {

@@ -23,8 +23,8 @@ CFLAGS = -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow -Wpointer-arith \
 default: $(TARGET)
 all: default
 
-OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
-HEADERS = $(wildcard *.h)
+OBJECTS = $(patsubst src/%.c, src/%.o, $(wildcard src/*.c))
+HEADERS = $(wildcard src/*.h)
 
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -35,16 +35,16 @@ $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -o $@
 
 clean:
-	-rm -f *.o
+	-rm -f src/*.o
 	-rm -f $(TARGET)
 
 man:
 	printf "%s\n%s\n%s\n\n" \
 		"% $(shell echo $(TARGET) | tr a-z A-Z)(1) $(TARGET) $(VERSION)" \
 		"% $(AUTHOR)" \
-		"% $(DATE)" > $(TARGET).tmp
-	pandoc $(TARGET).tmp $(TARGET).md -s -t man -o $(TARGET).1
-	rm -f $(TARGET).tmp
+		"% $(DATE)" > doc/$(TARGET).tmp
+	pandoc doc/$(TARGET).tmp doc/$(TARGET).md -s -t man -o $(TARGET).1
+	rm -f doc/$(TARGET).tmp
 
 
 install: all
@@ -58,4 +58,3 @@ install: all
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/$(TARGET)\
 		${DESTDIR}${MANPREFIX}/man1/$(TARGET).1
-

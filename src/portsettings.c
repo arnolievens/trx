@@ -15,7 +15,7 @@ portsettings_t portsettings_default(void)
 {
     portsettings_t portsettings = {
         .baudrate = 0,
-        .count = -1,
+        .count = (unsigned int)-1,
         .port = NULL,
         .timeout = 0,
     };
@@ -62,7 +62,7 @@ int portsettings_set_count(portsettings_t* portsettings, const char* str)
 {
     int i = atoi(str);
     if (i <= 0 && i != -1) return -1;
-    portsettings->count = i;
+    portsettings->count = (unsigned int)i;
     return 0;
 }
 

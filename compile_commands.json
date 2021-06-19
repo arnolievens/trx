@@ -2,46 +2,85 @@
   {
     "arguments": [
       "/usr/bin/x86_64-linux-gnu-gcc-10",
-      "-Wall",
       "-std=gnu99",
       "-pedantic",
+      "-Wextra",
+      "-Wall",
+      "-Wundef",
+      "-Wshadow",
+      "-Wpointer-arith",
+      "-Wcast-align",
+      "-Wstrict-prototypes",
+      "-Wstrict-overflow=5",
+      "-Wwrite-strings",
+      "-Wcast-qual",
+      "-Wswitch-default",
+      "-Wswitch-enum",
+      "-Wconversion",
+      "-Wunreachable-code",
       "-c",
-      "portsettings.c",
+      "src/portsettings.c",
       "-o",
-      "portsettings.o"
+      "src/portsettings.o"
     ],
     "directory": "/home/arno/src/trx",
-    "file": "/home/arno/src/trx/portsettings.c",
-    "output": "/home/arno/src/trx/portsettings.o"
+    "file": "/home/arno/src/trx/src/portsettings.c",
+    "output": "/home/arno/src/trx/src/portsettings.o"
   },
   {
     "arguments": [
       "/usr/bin/x86_64-linux-gnu-gcc-10",
-      "-Wall",
       "-std=gnu99",
       "-pedantic",
+      "-Wextra",
+      "-Wall",
+      "-Wundef",
+      "-Wshadow",
+      "-Wpointer-arith",
+      "-Wcast-align",
+      "-Wstrict-prototypes",
+      "-Wstrict-overflow=5",
+      "-Wwrite-strings",
+      "-Wcast-qual",
+      "-Wswitch-default",
+      "-Wswitch-enum",
+      "-Wconversion",
+      "-Wunreachable-code",
       "-c",
-      "serial.c",
+      "src/serial.c",
       "-o",
-      "serial.o"
+      "src/serial.o"
     ],
     "directory": "/home/arno/src/trx",
-    "file": "/home/arno/src/trx/serial.c",
-    "output": "/home/arno/src/trx/serial.o"
+    "file": "/home/arno/src/trx/src/serial.c",
+    "output": "/home/arno/src/trx/src/serial.o"
   },
   {
     "arguments": [
       "/usr/bin/x86_64-linux-gnu-gcc-10",
-      "-Wall",
       "-std=gnu99",
       "-pedantic",
+      "-Wextra",
+      "-Wall",
+      "-Wundef",
+      "-Wshadow",
+      "-Wpointer-arith",
+      "-Wcast-align",
+      "-Wstrict-prototypes",
+      "-Wstrict-overflow=5",
+      "-Wwrite-strings",
+      "-Wcast-qual",
+      "-Wswitch-default",
+      "-Wswitch-enum",
+      "-Wconversion",
+      "-Wunreachable-code",
       "-c",
-      "trx.c",
+      "src/trx.c",
       "-o",
-      "trx.o"
+      "src/trx.o"
     ],
     "directory": "/home/arno/src/trx",
-    "file": "/home/arno/src/trx/trx.c",
-    "output": "/home/arno/src/trx/trx.o"
+    "file": "/home/arno/src/trx/src/trx.c",
+    "output": "/home/arno/src/trx/src/trx.o"
   }
 ]
