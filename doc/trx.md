@@ -11,7 +11,7 @@ Device configuration is setup by means of options flags **(-pbnt)** or read from
 Multiple commands can be given in the command arguments or alternatively, a file can be specified (**-i**)\
 When an input file is provided as wel as one or more argument commands, the latter will be sent prior to reading the input file\
 The device config or command file may be either an absolue path or a file with respectively ".conf" and ".cmd" extensions in one of the following directories:\
-"~/.trx", "~/.config/trx" or "/etc/trx/"\
+"\~/.trx", "\~/.config/trx" or "/etc/trx/"\
 Command-line ptions override settings in the config file.\
 
 # OPTIONS
