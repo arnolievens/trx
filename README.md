@@ -6,7 +6,7 @@ Device configuration is setup by means of options flags (-pbnt) or read from a d
 
 ### usage
 
-[documentation](https://github.com/arnolievens/trx/blob/main/trx.md)
+[documentation](https://github.com/arnolievens/trx/blob/main/doc/trx.md)
 
 ### dependencies
 
