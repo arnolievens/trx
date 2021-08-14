@@ -2,3 +2,4 @@ foo.txt
 test.conf
 *.o
 trx
+.ccls-cache
