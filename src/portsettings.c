@@ -9,7 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "portsettings.h"
+#include "../include/portsettings.h"
 
 portsettings_t portsettings_default(void)
 {

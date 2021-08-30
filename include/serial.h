@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 
-#include "portsettings.h"
+#include "../include/portsettings.h"
 
 /**
  * initialize serial port, open file and set connection properties

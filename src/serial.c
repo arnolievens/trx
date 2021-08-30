@@ -15,7 +15,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "serial.h"
+#include "../include/serial.h"
 
 #define UNUSED(x) (void)(x)
 
