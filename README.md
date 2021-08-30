@@ -18,3 +18,7 @@ Device configuration is setup by means of options flags (-pbnt) or read from a d
 make clean install
 ```
 note: user should be in dial-out group
+
+### todo
+don't read absolute file paths unless preceded with ./ or /
+(like apt)

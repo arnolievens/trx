@@ -3,3 +3,4 @@ test.conf
 *.o
 trx
 .ccls-cache
+compile_commands.json
