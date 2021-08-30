@@ -1,6 +1,6 @@
-foo.txt
-test.conf
-*.o
-trx
+trx/
+bin/
+build/
+man/
 .ccls-cache
 compile_commands.json
