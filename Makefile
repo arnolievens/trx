@@ -6,7 +6,7 @@
 
 TARGET       = trx
 DESCRIPTION  = connect to serial devices from cli flags or file
-VERSION      = 0.11
+VERSION      = 0.12
 AUTHOR       = arnolievens@gmail.com
 DATE         = May 2021
 

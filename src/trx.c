@@ -190,7 +190,7 @@ char* find_file(const char* file, const char* ext)
     }
 
     /* absolute path */
-    if ((strncmp(buf, "./", 2)==0 || *buf == '/') && access(buf, F_OK) == -1) {
+    if ((strncmp(buf, "./", 2) != 0 || *buf != '/') && access(buf, F_OK) == -1) {
 
         /* ~/.config/trx/{}.ext */
         strcpy(buf, getenv("XDG_CONFIG_HOME"));
